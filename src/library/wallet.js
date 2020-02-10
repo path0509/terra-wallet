@@ -16,7 +16,9 @@ const hdPathTerra = `m/44'/330'/0'/0/` // key controlling Luna allocation
 class Wallet {
   static async deriveMasterKey(mnemonic) {
     // throws if mnemonic is invalid
-    bip39.validateMnemonic(mnemonic)
+    if (!bip39.validateMnemonic(mnemonic)) {
+      throw('invalid mnemonic')
+    }
 
     const seed = await bip39.mnemonicToSeed(mnemonic)
     const masterKey = bip32.fromSeed(seed)
@@ -148,8 +150,8 @@ class Wallet {
   // produces the signature for a message (returns Buffer)
   static signWithPrivateKey(signMessage, privateKey) {
     const signHash = Buffer.from(sha256(signMessage).toString(), `hex`)
-    const { signature } = secp256k1.ecdsaSign(signHash, Buffer.from(privateKey, `hex`))
-    return Buffer.from(signature)
+    const { signature } = secp256k1.sign(signHash, Buffer.from(privateKey, `hex`))
+    return signature
   }
 
   static createSignature(
