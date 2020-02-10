@@ -6,9 +6,10 @@ const sema = new Sema(1, {capacity: 100});
 const errCode = require('../../config/err-code');
 const bech32 = require('bech32');
 const Wallet = require('../library/wallet');
-const level = require('level')
+const level = require('level');
 
 
+const LAST_KEY_INDEX = 'last-key-index';
 class KeyManager {
     constructor(rpc) {
 
@@ -18,17 +19,19 @@ class KeyManager {
         }).catch(err => {
             console.log(err);
             process.exit(0);
-        })
+        });
         
-        this.db = level('../../key3.db')
+        this.db = level('key.db');
 
-        this.db.get('last-key-index')
+        this.db.get(LAST_KEY_INDEX)
         .then(value => {
             this.lastKeyIndex = Number(value);
         })
         .catch(err => {
-            if(err.type == 'NotFoundError') {
-                return this.db.put('last-key-index', String(0)).catch(err => {
+            if(err.type === 'NotFoundError') {
+                this.lastKeyIndex = 0;
+
+                return this.db.put(LAST_KEY_INDEX, String(0)).catch(err => {
                     console.error(err);
                     process.exit(0);
                 })
@@ -39,14 +42,14 @@ class KeyManager {
 
     async newAddress() {
         return new Promise(async (resolve, reject) => {
-            await sema.acquire()
+            await sema.acquire();
 
-            const {publicKey} = Wallet.deriveKeypair(this.masterKey, this.lastKeyIndex)
-            const newAddress = Wallet.createTerraAddress(publicKey)
+            const {publicKey} = Wallet.deriveKeypair(this.masterKey, this.lastKeyIndex);
+            const newAddress = Wallet.createTerraAddress(publicKey);
 
             try {
 
-                await this.db.put('last-key-index', String(this.lastKeyIndex + 1));
+                await this.db.put(LAST_KEY_INDEX, String(this.lastKeyIndex + 1));
                 await this.db.put(newAddress, JSON.stringify({
                     keyIndex: this.lastKeyIndex,
                     sequence: 0
@@ -74,7 +77,7 @@ class KeyManager {
     }
 
     getAddressFromIndex(index) {
-        const {publicKey} = Wallet.deriveKeypair(this.masterKey, index)
+        const {publicKey} = Wallet.deriveKeypair(this.masterKey, index);
         return Wallet.createTerraAddress(publicKey)
     }
 
@@ -99,9 +102,7 @@ class KeyManager {
         const wallet = Wallet.deriveKeypair(this.masterKey, accountInfo.keyIndex);
         const signature = Wallet.sign(jsonTx, wallet, {sequence: String(accountInfo.sequence), chain_id: config.CHAIN_ID, account_number: String(accountInfo.accountNumber)});
         const signedTx = Wallet.createSignedTx(jsonTx, signature);
-        const broadcastBody = Wallet.createBroadcastBody(signedTx, "sync")   // "block"(return after tx commit), "sync"(return afer CheckTx) and "async"(return right away) - ref: https://cosmos.network/rpc/#/ICS0/post_txs
-
-        return broadcastBody;
+        return Wallet.createBroadcastBody(signedTx, "sync")   // "block"(return after tx commit), "sync"(return afer CheckTx) and "async"(return right away) - ref: https://cosmos.network/rpc/#/ICS0/post_txs
     }
 
     static isAddress(address) {

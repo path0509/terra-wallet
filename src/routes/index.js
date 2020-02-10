@@ -42,7 +42,6 @@ const routes = (server) => {
     }, end);
 
     server.post("/address/new", start, (req, res, next) => {
-        let s = new Date();
 
         return controller.newAddress()
         .then(result => {
@@ -51,6 +50,15 @@ const routes = (server) => {
         })
     }, end);
 
+    server.get("/balance/:address", start, (req, res, next) => {
+        const address = req.params.address;
+
+        return controller.getBalance(address)
+        .then(result => {
+            res.result = result;
+            return next();
+        })
+    }, end);
 
     server.post("/send", start, (req, res, next) => {
 
@@ -65,21 +73,6 @@ const routes = (server) => {
             res.result = result;
             return next();
         })
-    }, end);
-
-    server.post("/oracle/vote", start, (req, res, next) => {
-
-        const fromAddress = req.body.from_address;
-        const price = req.body.price;
-        const denom = req.body.denom;
-        const memo = req.body.memo;
-
-
-        return controller.oracleVote(fromAddress, price, denom, memo)
-        .then(result => {
-            res.result = result;
-            return next();
-        }).catch(err => {console.log(err)})
     }, end);
 
     server.get("/block/:height", start, (req, res, next) => {
@@ -109,9 +102,9 @@ const routes = (server) => {
         
         const page = req.query.page;
         const size = req.query.size;
-        const tags = req.query.tags;
+        const events = req.query.events;
 
-        return controller.getTransaction(page, size, tags)
+        return controller.getTransaction(page, size, events)
         .then(result => {
             res.result = result;
             return next();

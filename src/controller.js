@@ -52,6 +52,17 @@ class Controller {
 
     };
 
+    async getBalance(address) {
+        const inputs = [address];
+        try {
+            return Controller._(inputs, await this.rpc.balance(address), null);
+        } catch (err) {
+            console.log('getBalance', inputs, err);
+            return Controller._(inputs, null, errCode.SYSTEM_ERROR);
+        }
+
+    }
+
     static checkAddress(address) {
         const inputs = [address];
         try {
@@ -87,52 +98,7 @@ class Controller {
         .then(res => {
             if(res.result && res.result.value) {
                 const broadcastBody = this.km.signAndCompleteBroadcastBody(accountInfo, res.result.value);
-                return this.rpc.broadcast(broadcastBody);    
-            } else {
-                throw res;
-            }
-            
-        }).then(async res => {
-            if(res.code && res.code !== 0) {
-                throw res;
-            }
-
-            accountInfo.sequence++;
-            await this.km.setAccountInfo(accountInfo.address, accountInfo);
-            return Controller._(inputs, res, null);
-        }).catch(err => {
-            console.log('send', inputs, err);
-            return Controller._(inputs, null, errCode.TRANSACTION_ERROR);
-        });
-    };
-
-    async oracleVote(fromAddress, price, denom, memo) {
-        const inputs = [fromAddress, denom, price, memo];
-
-        if (denom && config.DENOM.indexOf(denom) === -1) {
-            console.log('send', inputs, "DENOM NOT SUPPORTED");
-            return Controller._(inputs, null, errCode.DENOM_NOT_SUPPORTED);
-        }
-
-        // Get Sequence Number & Key Index for Signing
-        const { sequence, keyIndex } = await this.km.getAddressInfo(fromAddress);
-
-        // Get Account Number
-        const { sequenceNumber, accountNumber } = await this.rpc.loadAccountInfo(fromAddress);
-        
-        const accountInfo = {
-            address: fromAddress,
-            sequence: Math.max(sequence, sequenceNumber),
-            accountNumber: accountNumber,
-            keyIndex: keyIndex,
-        };
-
-        return this.rpc.oracleVote(accountInfo, price, denom || config.DEFAULT_DENOM, memo)
-        .then(res => {
-
-            if(res.result && res.result.value) {
-                const broadcastBody = this.km.signAndCompleteBroadcastBody(accountInfo, res.result.value);
-                console.log(JSON.stringify(broadcastBody));
+                console.log(broadcastBody)
                 return this.rpc.broadcast(broadcastBody);    
             } else {
                 throw res;
@@ -184,10 +150,10 @@ class Controller {
         });
     };
 
-    getTransaction(page = 1, size = 10, tags = 'action=send') {
-        const inputs = [page, size, tags];
+    getTransaction(page = 1, size = 10, events = 'message.action=send') {
+        const inputs = [page, size, events];
 
-        return this.rpc.getTxs(page, size, tags)
+        return this.rpc.getTxs(page, size, events)
         .then(txs => {
             if(!txs) 
                 return Controller._(inputs, null, errCode.SYSTEM_ERROR);

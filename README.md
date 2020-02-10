@@ -12,11 +12,11 @@ curl -X GET -isu terra:terra-password http://127.0.0.1:8080/address/list
 
 
 # Query Transaction
-curl -X GET -isu terra:terra-password http://127.0.0.1:8080/txs\?page\=10\&size\=10\&tags\='action=pricefeed'
+curl -X GET -isu terra:terra-password http://127.0.0.1:8080/txs\?page\=1\&limit\=10\&events\='message.action=send'
 
-curl -X GET -isu terra:terra-password http://127.0.0.1:8080/txs\?page\=10\&size\=10\&tags\='action=send&sender=terra12c5s58hnc3c0pjr5x7u68upsgzg2r8fwq5nlsy'
+curl -X GET -isu terra:terra-password http://127.0.0.1:8080/txs\?page\=1\&limit\=10\&events\='message.action=send%26message.sender=terra12c5s58hnc3c0pjr5x7u68upsgzg2r8fwq5nlsy'
 
-curl -X GET -isu terra:terra-password http://127.0.0.1:8080/txs\?page\=10\&size\=10\&tags\='action=send&recipient=terra160untgd5az0n4g5su6j7a7nq4qgl3vw4zqy9uw'
+curl -X GET -isu terra:terra-password http://127.0.0.1:8080/txs\?page\=1\&limit\=10\&events\='message.action=send%26message.recipient=terra160untgd5az0n4g5su6j7a7nq4qgl3vw4zqy9uw'
 
 
 # Send (from_address should exist in address list)

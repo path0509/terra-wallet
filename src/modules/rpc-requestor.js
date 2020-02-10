@@ -53,8 +53,12 @@ class Client {
         return argReq.call(this, 'GET', '/auth/accounts');
     }
 
+    get balance() {
+        return argReq.call(this, 'GET', '/bank/balances');
+    }
+
     async loadAccountInfo(address) {
-        let accountInfo = await this.account(address);
+        let accountInfo = (await this.account(address))['result'];
         if(!accountInfo || !accountInfo.value
             || !accountInfo.value.account_number
             || !accountInfo.value.sequence) {
@@ -102,39 +106,6 @@ class Client {
         }
     }
 
-    async oracleVote (accountInfo, price, denom, memo) {
-        await sema.acquire();
-
-        const inputs = [accountInfo, price, denom, memo];
-        try {
-            if(!KeyManager.isAddress(accountInfo.address)) {
-                console.log("transfer", inputs, "Address should start with \"terra\"");
-                return {error: errCode.INVALID_PARAM};
-            }
-
-            let result = await this.request('POST', '/oracle/denoms/' + denom + '/votes', {
-                "base_req": {
-                    "from": accountInfo.address,
-                    "chain_id": config.CHAIN_ID,
-                    "account_number": String(accountInfo.accountNumber),
-                    "sequence": String(accountInfo.sequence),
-                    "fees": config.FEES,
-                    "memo": memo,
-                    "simulate": false,
-                },
-                "price": String(price)
-            });
-
-            sema.release();
-            return {result: result};
-        } catch (err) {
-            console.log("oracleVote", inputs, err);
-
-            sema.release();
-            return {error: errCode.TRANSACTION_ERROR};
-        }
-    }
-
     get getBlock() {
         return argReq.call(this, 'GET', '/blocks');
     }
@@ -144,8 +115,8 @@ class Client {
     }
 
     get getTxs() {
-        return (page, size, tags = "action=send") => {
-            return this.request('GET', "/txs?page=" + page + "&limit=" + size + "&" + tags);
+        return (page, size, events = "message.action=send") => {
+            return this.request('GET', "/txs?page=" + page + "&limit=" + size + "&" + events);
         }
     }
 

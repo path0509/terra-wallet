@@ -17,10 +17,10 @@ module.exports = {
 
     BOOTSTRAP_HEIGHT: 0,
 
-    DEFAULT_DENOM: "mluna",
-    DENOM: ["mluna", "msdr", "mkrw", "musd", "mcny", "mgbp", "meur"],
+    DEFAULT_DENOM: "uluna",
+    DENOM: ["uluna", "usdr", "ukrw", "uusd", "ucny", "ugbp", "ueur"],
     FEES: [{
-        "denom": "mluna",
+        "denom": "uluna",
         "amount": "1",
     }],
 

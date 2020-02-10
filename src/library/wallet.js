@@ -2,8 +2,8 @@
 
 "use strict"
 
-const bip39 = require(`bip39`)
 const bip32 = require(`bip32`)
+const bip39 = require(`bip39`)
 const bech32 = require(`bech32`)
 const secp256k1 = require(`secp256k1`)
 const sha256 = require("crypto-js/sha256")
@@ -148,8 +148,8 @@ class Wallet {
   // produces the signature for a message (returns Buffer)
   static signWithPrivateKey(signMessage, privateKey) {
     const signHash = Buffer.from(sha256(signMessage).toString(), `hex`)
-    const { signature } = secp256k1.sign(signHash, Buffer.from(privateKey, `hex`))
-    return signature
+    const { signature } = secp256k1.ecdsaSign(signHash, Buffer.from(privateKey, `hex`))
+    return Buffer.from(signature)
   }
 
   static createSignature(
@@ -172,10 +172,10 @@ class Wallet {
   // main function to sign a jsonTx using the local keystore wallet
   // returns the complete signature object to add to the tx
   static sign(jsonTx, wallet, requestMetaData) {
-    const { sequence, account_number } = requestMetaData
-    const signMessage = Wallet.createSignMessage(jsonTx, requestMetaData)
-    const signatureBuffer = Wallet.signWithPrivateKey(signMessage, wallet.privateKey)
-    const pubKeyBuffer = Buffer.from(wallet.publicKey, `hex`)
+    const { sequence, account_number } = requestMetaData;
+    const signMessage = Wallet.createSignMessage(jsonTx, requestMetaData);
+    const signatureBuffer = Wallet.signWithPrivateKey(signMessage, wallet.privateKey);
+    const pubKeyBuffer = Buffer.from(wallet.publicKey, `hex`);
     return Wallet.createSignature(
       signatureBuffer,
       sequence,
